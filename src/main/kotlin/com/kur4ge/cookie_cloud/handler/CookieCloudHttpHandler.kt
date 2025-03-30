@@ -7,6 +7,7 @@ import burp.api.montoya.http.handler.RequestToBeSentAction
 import burp.api.montoya.http.handler.HttpResponseReceived
 import burp.api.montoya.http.handler.ResponseReceivedAction
 import com.kur4ge.cookie_cloud.model.DomainState
+import com.kur4ge.cookie_cloud.utils.Config
 import java.util.regex.Pattern
 
 /**
@@ -19,6 +20,7 @@ class CookieCloudHttpHandler(private val api: MontoyaApi) : HttpHandler {
     private val forceFetchPattern = Pattern.compile("!\\{([^}]+)\\}")
     private val cacheFetchPattern = Pattern.compile("\\$\\{([^}]+)\\}")
     private val domainState = DomainState.getInstance()
+    private val config = Config.getInstance()
 
     /**
      * 处理Cookie模式匹配
@@ -60,6 +62,11 @@ class CookieCloudHttpHandler(private val api: MontoyaApi) : HttpHandler {
     }
 
     override fun handleHttpRequestToBeSent(requestToBeSent: HttpRequestToBeSent): RequestToBeSentAction {
+        // 检查全局开关是否启用
+        if (!config.isEnabled()) {
+            return RequestToBeSentAction.continueWith(requestToBeSent)
+        }
+        
         // 获取请求的域名和路径
         val urlString = requestToBeSent.url()
         api.logging().logToOutput("url: $urlString")
@@ -70,20 +77,23 @@ class CookieCloudHttpHandler(private val api: MontoyaApi) : HttpHandler {
 
         // 获取原始Cookie
         val originalCookie = requestToBeSent.headerValue("Cookie") ?: ""
-        if (!originalCookie.isEmpty()) {
+        if (originalCookie.isNotEmpty()) {
             val processedCookie = processCookiePatterns(originalCookie, domain, path)
             if (processedCookie != originalCookie) {
                 // 创建新的请求，替换Cookie头
                 val modifiedRequest = requestToBeSent.withUpdatedHeader("Cookie", processedCookie)
                 return RequestToBeSentAction.continueWith(modifiedRequest)
             }
-    
         }
         api.logging().logToOutput("拦截到 HTTP 请求: $originalCookie")
         return RequestToBeSentAction.continueWith(requestToBeSent)
     }
 
     override fun handleHttpResponseReceived(responseReceived: HttpResponseReceived): ResponseReceivedAction {
+        // 检查全局开关是否启用
+        if (!config.isEnabled()) {
+            return ResponseReceivedAction.continueWith(responseReceived)
+        }
         return ResponseReceivedAction.continueWith(responseReceived)
     }
 }

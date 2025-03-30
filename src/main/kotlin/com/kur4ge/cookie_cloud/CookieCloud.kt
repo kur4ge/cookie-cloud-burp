@@ -48,7 +48,6 @@ class CookieCloud : BurpExtension {
         // 创建并注册 HTTP 拦截器
         val httpHandler = CookieCloudHttpHandler(api)
         api.http().registerHttpHandler(httpHandler)
-        
         api.logging().logToOutput("Cookie Cloud HTTP 拦截器已注册")
     }
 
