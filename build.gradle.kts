@@ -5,6 +5,7 @@
  * Learn more about Gradle by exploring our Samples at https://docs.gradle.org/8.13/samples
  */
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     kotlin("jvm") version "2.1.20"
@@ -20,5 +21,25 @@ repositories {
 }
 
 dependencies {
+    implementation(kotlin("stdlib"))
+    implementation(kotlin("reflect"))
     implementation("net.portswigger.burp.extensions:montoya-api:2023.12.1")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.80")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.code.gson:gson:2.12.1")
+
+}
+
+
+tasks {
+    named<ShadowJar>("shadowJar") {
+        mergeServiceFiles()
+        manifest {
+            attributes["Main-Class"] = "com.kur4ge.cookie_cloud.CookieCloud"
+        }
+    }
+    
+    build {
+        dependsOn(shadowJar)
+    }
 }
