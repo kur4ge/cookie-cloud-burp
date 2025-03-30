@@ -1,5 +1,6 @@
 package com.kur4ge.cookie_cloud.utils
 
+import burp.api.montoya.core.ToolType
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonArray
@@ -33,6 +34,7 @@ class Config {
     private var endpoint: String = ""
     private var localPrivateKey: String = ""
     private val peers = mutableListOf<Peer>()
+    private var enabledTools: Int = 0  // 新增：启用的工具标识
     
     // Gson 实例
     private val gson = Gson()
@@ -67,6 +69,7 @@ class Config {
                 enabled = jsonObject.get("enabled")?.asBoolean ?: false
                 endpoint = jsonObject.get("endpoint")?.asString ?: ""
                 localPrivateKey = jsonObject.get("localPrivateKey")?.asString ?: ""
+                enabledTools = jsonObject.get("enabledTools")?.asInt ?: 0
                 
                 // 读取对端列表
                 peers.clear()
@@ -104,6 +107,7 @@ class Config {
             // 保存基本配置
             jsonObject.addProperty("enabled", enabled)
             jsonObject.addProperty("endpoint", endpoint)
+            jsonObject.addProperty("enabledTools", enabledTools)
             jsonObject.addProperty("localPrivateKey", if (localPrivateKey.startsWith("0x", ignoreCase = true)) {
                 localPrivateKey.substring(2)
             } else {
@@ -140,12 +144,28 @@ class Config {
         enabled = false
         endpoint = ""
         localPrivateKey = ""
+        enabledTools = 0
         peers.clear()
     }
     
     // Getter 和 Setter 方法
     
-    fun isEnabled(): Boolean = enabled
+    /**
+     * 检查是否启用
+     * @param toolType 可选的工具类型标识，如果提供则检查特定工具是否启用
+     * @return 如果未提供工具类型，则返回全局启用状态；否则返回特定工具是否启用
+     */
+    fun isEnabled(toolType: ToolType? = null): Boolean {
+        if (toolType == null) {
+            return enabled
+        }
+        // 首先检查全局开关是否启用
+        if (!enabled) {
+            return false
+        }
+        // 然后检查特定工具是否启用
+        return (enabledTools and (1 shl toolType.ordinal )) != 0
+    }
     
     fun setEnabled(enabled: Boolean) {
         this.enabled = enabled
@@ -255,6 +275,21 @@ class Config {
 
     fun clearPeers() {
         peers.clear()
+        saveConfig()
+    }
+    
+    /**
+     * 获取启用的工具标识
+     * @return 启用的工具标识（整数值，每个位代表一个工具）
+     */
+    fun getEnabledTools(): Int = enabledTools
+    
+    /**
+     * 设置启用的工具标识
+     * @param toolFlags 工具标识（整数值，每个位代表一个工具）
+     */
+    fun setEnabledTools(toolFlags: Int) {
+        this.enabledTools = toolFlags
         saveConfig()
     }
 }

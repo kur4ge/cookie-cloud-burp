@@ -63,13 +63,13 @@ class CookieCloudHttpHandler(private val api: MontoyaApi) : HttpHandler {
 
     override fun handleHttpRequestToBeSent(requestToBeSent: HttpRequestToBeSent): RequestToBeSentAction {
         // 检查全局开关是否启用
-        if (!config.isEnabled()) {
+        if (!config.isEnabled(requestToBeSent.toolSource().toolType())) {
             return RequestToBeSentAction.continueWith(requestToBeSent)
         }
         
         // 获取请求的域名和路径
         val urlString = requestToBeSent.url()
-        api.logging().logToOutput("url: $urlString")
+        api.logging().logToOutput("url: $urlString, tool: ${requestToBeSent.toolSource().toolType().ordinal}")
 
         val url = java.net.URL(urlString)
         val domain = url.host
@@ -91,7 +91,7 @@ class CookieCloudHttpHandler(private val api: MontoyaApi) : HttpHandler {
 
     override fun handleHttpResponseReceived(responseReceived: HttpResponseReceived): ResponseReceivedAction {
         // 检查全局开关是否启用
-        if (!config.isEnabled()) {
+        if (!config.isEnabled(responseReceived.toolSource().toolType())) {
             return ResponseReceivedAction.continueWith(responseReceived)
         }
         return ResponseReceivedAction.continueWith(responseReceived)
