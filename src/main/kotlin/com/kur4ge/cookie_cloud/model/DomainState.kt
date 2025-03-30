@@ -119,6 +119,42 @@ class DomainState {
         // 用分号和空格连接所有匹配的Cookie
         return matchedCookies.joinToString("; ")
     }
+    
+    /**
+     * 获取指定域名的HTTP头信息
+     * @param name 对端名称
+     * @param domain 域名
+     * @param headerName 头信息名称
+     * @param cache 是否使用缓存，默认为true
+     * @return 头信息值，如果没有找到则返回null
+     */
+    fun getHttpHeader(name: String, domain: String, headerName: String, cache: Boolean = true): String? {
+        // 尝试从缓存获取域名状态
+        var domainInfo = if (cache) getDomainStateByCache(name, domain) else null
+        
+        // 如果缓存中没有或不使用缓存，则从远程获取
+        if (domainInfo == null) {
+            val remoteState = getRemoteDomainState(name, listOf(domain))
+            domainInfo = remoteState[domain]
+        }
+        
+        // 如果域名信息为空，返回null
+        if (domainInfo == null) {
+            return null
+        }
+        
+        // 不区分大小写查找头信息
+        // 先尝试直接获取
+        val headerValue = domainInfo.headers[headerName]
+        if (headerValue != null) {
+            return headerValue
+        }
+        
+        // 如果直接获取失败，则进行不区分大小写的查找
+        return domainInfo.headers.entries.firstOrNull { 
+            it.key.equals(headerName, ignoreCase = true) 
+        }?.value
+    }
 
     /**
      * 从缓存获取域名状态

@@ -3,14 +3,20 @@
 Cookie Cloud Burp 是一个 Burp Suite 插件，用于管理和同步 Cookie 数据。它允许用户在不同设备间安全地共享和同步 Cookie，简化了多设备测试和协作渗透测试的流程。
 
 ## 主要功能
-- Cookie 自动注入 ：自动将云端或本地缓存的 Cookie 注入到 HTTP 请求中
-- 模式匹配 ：支持两种 Cookie 获取模式
-  - !{name} : 强制从远程获取最新的 Cookie
-  - ${name} : 从本地缓存获取 Cookie
-- 密钥管理 ：支持本地密钥和对端密钥的管理，确保 Cookie 数据的安全传输
-- 工具选择 ：可以选择在哪些 Burp 工具中启用插件功能（Proxy、Repeater、Intruder 等）
-- 缓存控制 ：可配置数据缓存时间，平衡性能和实时性
-
+- Cookie 自动注入：自动将云端或本地缓存的 Cookie 注入到 HTTP 请求中
+- Header 自动注入：自动将云端或本地缓存的 Header 注入到 HTTP 请求中
+- 模式匹配：支持多种获取模式
+  - Cookie 获取模式：
+    - !{name} : 强制从远程获取最新的 Cookie
+    - ${name} : 从本地缓存获取 Cookie
+  - Header 获取模式（不区分大小写）：
+    - !{peername|header-name} : 强制从远程获取最新的 `Header[header-name]`
+    - ${peername|header-name} : 从本地缓存获取 `Header[header-name]`
+    - !{peername} : 使用当前头名称，强制从远程获取最新的 Header
+    - ${peername} : 使用当前头名称，从本地缓存获取 Header
+- 密钥管理：支持本地密钥和对端密钥的管理，确保数据的安全传输
+- 工具选择：可以选择在哪些 Burp 工具中启用插件功能（Proxy、Repeater、Intruder 等）
+- 缓存控制：可配置数据缓存时间，平衡性能和实时性
 
 ## 界面组件
 插件界面分为以下几个主要部分：
