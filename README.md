@@ -42,3 +42,8 @@ Cookie Cloud Burp 是一个 Burp Suite 插件，用于管理和同步 Cookie 数
 3. 点击 "Add" 按钮，选择 "Java" 类型
 4. 选择下载的 JAR 文件
 5. 插件将被加载，并在 Burp Suite 中显示 "Cookie Cloud" 标签
+
+
+# License
+
+[GNU General Public License v3.0](https://github.com/kur4ge/cookie-cloud-burp/blob/main/LICENSE)
