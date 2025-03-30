@@ -29,39 +29,42 @@ class Cookies(private val domainState: DomainState) {
      * @param domain 域名
      * @return 域名的Cookie列表，如果获取失败则返回空列表
      */
-    fun getCookies(name: String, domain: String): List<DomainState.CookieItem> {
+    fun getCookies(name: String, domain: String, cache: Boolean=true): List<DomainState.CookieItem> {
         // 获取所有可能的Cookie域名形式
         val possibleDomains = getPossibleCookieDomains(domain)
-        
-        // 收集所有可能域名的Cookie
         val allCookies = mutableListOf<DomainState.CookieItem>()
-        var needRemoteData = false
-        
-        // 遍历所有可能的域名形式
-        for (possibleDomain in possibleDomains) {
-            // 尝试从DomainState获取缓存的域名信息
-            val domainInfo = domainState.getDomainState(name, possibleDomain)
+
+        if (cache) {
+            // 收集所有可能域名的Cookie
+            var needRemoteData = false
             
-            if (domainInfo != null) {
-                // 如果找到缓存的域名信息，添加到结果列表
-                allCookies.addAll(domainInfo.cookies)
-            } else {
-                // 如果任何一个域名没有缓存，标记需要从远程获取
-                needRemoteData = true
-                break
+            // 遍历所有可能的域名形式
+            for (possibleDomain in possibleDomains) {
+                // 尝试从DomainState获取缓存的域名信息
+                val domainInfo = domainState.getDomainState(name, possibleDomain)
+                
+                if (domainInfo != null) {
+                    // 如果找到缓存的域名信息，添加到结果列表
+                    allCookies.addAll(domainInfo.cookies)
+                } else {
+                    // 如果任何一个域名没有缓存，标记需要从远程获取
+                    needRemoteData = true
+                    break
+                }
             }
-        }
-        
-        // 如果所有域名都有缓存，直接返回收集到的Cookie
-        if (!needRemoteData) {
-            return allCookies
+            
+            // 如果所有域名都有缓存，直接返回收集到的Cookie
+            if (!needRemoteData) {
+                return allCookies
+            }
+            allCookies.clear() // 清除 走后面逻辑
+
         }
         
         // 如果需要从远程获取数据
         val remoteDomainInfoMap = domainState.getRemoteDomainState(name, possibleDomains)
         
         // 清空之前收集的Cookie，因为可能有些域名已经过期或变更
-        allCookies.clear()
         
         // 从远程获取的数据中提取Cookie
         for (possibleDomain in possibleDomains) {

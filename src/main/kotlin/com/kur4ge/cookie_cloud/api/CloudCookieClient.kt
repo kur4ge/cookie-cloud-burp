@@ -100,7 +100,7 @@ class CloudCookieClient {
      * @param peerPublicKey 对端公钥
      * @return 解密后的数据，如果解密失败则返回null
      */
-    private fun decryptData(encryptedData: EncryptedData, peerPublicKey: String): DomainStateItem? {
+    private fun decryptData(encryptedData: EncryptedData, peerPublicKey: String): DomainStateItem {
         try {
             // 获取本地私钥
             val localPrivateKey = config.getLocalPrivateKey()
@@ -119,7 +119,7 @@ class CloudCookieClient {
             return decryptedData
         } catch (e: Exception) {
             // throw RuntimeException("解密出错，错误码: ${e}")
-            return null
+            return DomainStateItem(cookies = emptyList(), headers = emptyMap())
         }
     }
 
@@ -206,8 +206,11 @@ class CloudCookieClient {
                     for ((id, encryptedData) in responseObj.data) {
                         val domain = idToDomainMap[id] ?: continue
                         val decryptedData = decryptData(encryptedData, publicKey)
-                        if (decryptedData != null) {
-                            domainStateMap[domain] = decryptedData
+                        domainStateMap[domain] = decryptedData
+                    }
+                    domains.forEach { domain ->
+                        if (!domainStateMap.containsKey(domain)) {
+                            domainStateMap[domain] = DomainStateItem(cookies = emptyList(), headers = emptyMap())
                         }
                     }
                 } else {

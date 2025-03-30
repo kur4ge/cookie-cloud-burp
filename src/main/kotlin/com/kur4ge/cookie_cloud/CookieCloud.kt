@@ -1,5 +1,4 @@
 package com.kur4ge.cookie_cloud
-
 import burp.api.montoya.BurpExtension
 import burp.api.montoya.MontoyaApi
 import com.kur4ge.cookie_cloud.utils.Crypto
@@ -8,6 +7,7 @@ import com.kur4ge.cookie_cloud.ui.CookieCloudUI
 import com.kur4ge.cookie_cloud.model.Cookies
 import com.kur4ge.cookie_cloud.model.DomainState
 import com.kur4ge.cookie_cloud.api.CloudCookieClient
+import com.kur4ge.cookie_cloud.handler.CookieCloudHttpHandler
 import java.io.File
 import java.net.URISyntaxException
 
@@ -31,9 +31,7 @@ class CookieCloud : BurpExtension {
         api.logging().logToOutput("Cookie Cloud 配置文件路径: $configPath")
 
         initializeUI()
-
-
-        
+        registerHttpHandler()
     }
     
     private fun initializeUI() {
@@ -46,5 +44,12 @@ class CookieCloud : BurpExtension {
         api.logging().logToOutput("Cookie Cloud UI 已加载")
     }
     
+    private fun registerHttpHandler() {
+        // 创建并注册 HTTP 拦截器
+        val httpHandler = CookieCloudHttpHandler(api)
+        api.http().registerHttpHandler(httpHandler)
+        
+        api.logging().logToOutput("Cookie Cloud HTTP 拦截器已注册")
+    }
 
 }

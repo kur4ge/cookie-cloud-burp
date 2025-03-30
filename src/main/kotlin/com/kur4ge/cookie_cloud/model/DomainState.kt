@@ -102,8 +102,8 @@ class DomainState {
      * @param path 路径，默认为"/"
      * @return 所有匹配的Cookie，用分号和空格连接，如果没有找到则返回空字符串
      */
-    fun getHttpCookie(name: String, domain: String, path: String = "/"): String {
-        val cookieItems = cookies.getCookies(name, domain)
+    fun getHttpCookie(name: String, domain: String, path: String = "/", cache: Boolean = true): String {
+        val cookieItems = cookies.getCookies(name, domain, cache=cache)
         val matchedCookies = mutableListOf<String>()
         
         // 遍历所有匹配域名的Cookie项
