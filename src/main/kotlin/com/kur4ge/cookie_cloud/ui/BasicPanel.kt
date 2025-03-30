@@ -16,6 +16,7 @@ class BasicPanel(private val api: MontoyaApi) {
     private val endpointField = JTextField("", 100)
     private val config = Config.getInstance()
     private val cacheTimeField = JTextField("10", 5)
+    private val saveStatusLabel = JLabel("")  // 保存状态标签
 
     // 定义工具常量
     companion object {
@@ -164,6 +165,14 @@ class BasicPanel(private val api: MontoyaApi) {
         val saveEndpointButton = JButton("保存")
         panel.add(saveEndpointButton, gbc)
         
+        // 添加保存状态提示标签
+        gbc.gridx = 3
+        gbc.gridy = 2
+        gbc.gridwidth = 1
+        gbc.weightx = 0.0
+        saveStatusLabel.foreground = java.awt.Color.RED
+        panel.add(saveStatusLabel, gbc)
+        
         // 事件监听
         enableToggle.addActionListener { 
             val enabled = enableToggle.isSelected
@@ -175,6 +184,16 @@ class BasicPanel(private val api: MontoyaApi) {
                 checkbox.isEnabled = enabled
             }
         }
+        
+        // 为输入字段添加变更监听
+        val docListener = object : javax.swing.event.DocumentListener {
+            override fun insertUpdate(e: javax.swing.event.DocumentEvent) { updateSaveStatus() }
+            override fun removeUpdate(e: javax.swing.event.DocumentEvent) { updateSaveStatus() }
+            override fun changedUpdate(e: javax.swing.event.DocumentEvent) { updateSaveStatus() }
+        }
+        
+        endpointField.document.addDocumentListener(docListener)
+        cacheTimeField.document.addDocumentListener(docListener)
         
         // 为每个复选框添加事件监听
         toolCheckboxes.forEach { (_, checkbox) ->
@@ -191,10 +210,17 @@ class BasicPanel(private val api: MontoyaApi) {
             try {
                 val cacheTime = cacheTimeField.text.toInt()
                 config.setCacheTime(cacheTime)
+                saveStatusLabel.text = ""  // 更新保存状态
             } catch (e: NumberFormatException) {
                 JOptionPane.showMessageDialog(panel, "缓存时间必须是数字", "输入错误", JOptionPane.ERROR_MESSAGE)
             }
         }
+    }
+    
+    // 更新保存状态提示
+    private fun updateSaveStatus() {
+        saveStatusLabel.text = "未保存！！！"
+        saveStatusLabel.foreground = java.awt.Color.RED
     }
     
     private fun updateEnabledTools() {
@@ -225,6 +251,7 @@ class BasicPanel(private val api: MontoyaApi) {
             checkbox.isSelected = (enabledTools and flag) != 0
             checkbox.isEnabled = enableToggle.isSelected
         }
+        saveStatusLabel.text = ""
     }
     
     fun getPanel(): JPanel {
