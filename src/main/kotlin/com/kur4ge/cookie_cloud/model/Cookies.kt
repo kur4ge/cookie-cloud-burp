@@ -41,7 +41,7 @@ class Cookies(private val domainState: DomainState) {
             // 遍历所有可能的域名形式
             for (possibleDomain in possibleDomains) {
                 // 尝试从DomainState获取缓存的域名信息
-                val domainInfo = domainState.getDomainState(name, possibleDomain)
+                val domainInfo = domainState.getDomainStateByCache(name, possibleDomain)
                 
                 if (domainInfo != null) {
                     // 如果找到缓存的域名信息，添加到结果列表
@@ -58,7 +58,6 @@ class Cookies(private val domainState: DomainState) {
                 return allCookies
             }
             allCookies.clear() // 清除 走后面逻辑
-
         }
         
         // 如果需要从远程获取数据

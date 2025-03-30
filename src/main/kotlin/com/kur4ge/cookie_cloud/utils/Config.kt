@@ -35,6 +35,7 @@ class Config {
     private var localPrivateKey: String = ""
     private val peers = mutableListOf<Peer>()
     private var enabledTools: Int = 0  // 新增：启用的工具标识
+    private var cacheTime: Int = 10    // 新增：缓存时间，默认30分钟
     
     // Gson 实例
     private val gson = Gson()
@@ -66,10 +67,11 @@ class Config {
                 val jsonObject = JsonParser.parseString(jsonContent).asJsonObject
                 
                 // 读取基本配置
-                enabled = jsonObject.get("enabled")?.asBoolean ?: false
-                endpoint = jsonObject.get("endpoint")?.asString ?: ""
-                localPrivateKey = jsonObject.get("localPrivateKey")?.asString ?: ""
-                enabledTools = jsonObject.get("enabledTools")?.asInt ?: 0
+                enabled = jsonObject.get("enabled")?.asBoolean ?: enabled
+                endpoint = jsonObject.get("endpoint")?.asString ?: endpoint
+                localPrivateKey = jsonObject.get("localPrivateKey")?.asString ?: localPrivateKey
+                enabledTools = jsonObject.get("enabledTools")?.asInt ?: enabledTools
+                cacheTime = jsonObject.get("cacheTime")?.asInt ?: cacheTime
                 
                 // 读取对端列表
                 peers.clear()
@@ -108,6 +110,7 @@ class Config {
             jsonObject.addProperty("enabled", enabled)
             jsonObject.addProperty("endpoint", endpoint)
             jsonObject.addProperty("enabledTools", enabledTools)
+            jsonObject.addProperty("cacheTime", cacheTime)
             jsonObject.addProperty("localPrivateKey", if (localPrivateKey.startsWith("0x", ignoreCase = true)) {
                 localPrivateKey.substring(2)
             } else {
@@ -145,6 +148,7 @@ class Config {
         endpoint = ""
         localPrivateKey = ""
         enabledTools = 0
+        cacheTime = 10
         peers.clear()
     }
     
@@ -290,6 +294,21 @@ class Config {
      */
     fun setEnabledTools(toolFlags: Int) {
         this.enabledTools = toolFlags
+        saveConfig()
+    }
+    
+    /**
+     * 获取缓存时间（分钟）
+     * @return 缓存时间，单位为分钟
+     */
+    fun getCacheTime(): Int = cacheTime
+    
+    /**
+     * 设置缓存时间（分钟）
+     * @param minutes 缓存时间，单位为分钟
+     */
+    fun setCacheTime(minutes: Int) {
+        this.cacheTime = if (minutes < 0) 0 else minutes
         saveConfig()
     }
 }

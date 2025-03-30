@@ -32,10 +32,12 @@ class PeerKeyPanel(private val api: MontoyaApi) {
         // 表格设置
         peerTable.rowHeight = 30
         
+
         // 添加表格选择监听器，用于编辑功能
         val nameField = JTextField(15)
         val peerNameField = JTextField(15)
         val keyField = JTextField(30)
+
         val addButton = JButton("添加对端")
         val editButton = JButton("更新对端")
         val deleteButton = JButton("删除对端")  // 添加删除按钮

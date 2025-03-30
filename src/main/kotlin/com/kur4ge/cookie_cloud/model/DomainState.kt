@@ -38,7 +38,7 @@ class DomainState {
      */
     private data class CachedDomainInfo(
         val domainInfo: DomainInfo,
-        val expirationTime: Long
+        val createdTime: Long
     )
     
     /**
@@ -126,17 +126,41 @@ class DomainState {
      * @param domain 域名
      * @return 域名信息
      */
-    fun getDomainState(name: String, domain: String): DomainInfo? {
-        // 生成缓存键，如果有对端名称则包含在键中
-        val cacheKey = "$domain:$name"
+    fun getDomainStateByCache(name: String, domain: String): DomainInfo? {
+        // 获取配置中的缓存时间（分钟）
+        val cacheTimeMinutes = config.getCacheTime()
         
-        // 检查缓存
-        val cachedInfo = domainCache[cacheKey]
-        if (cachedInfo != null && System.currentTimeMillis() < cachedInfo.expirationTime) {
-            return cachedInfo.domainInfo
+        // 如果缓存时间为0，表示不使用缓存，直接返回null
+        if (cacheTimeMinutes <= 0) {
+            if (domainCache.size > 0) { // 清理内存
+                clearAllCache()
+            }
+            return null
         }
         
-        return null
+        // 生成缓存键
+        val cacheKey = "$name:$domain"
+        
+        // 获取缓存
+        val cachedInfo = domainCache[cacheKey]
+        
+        // 如果缓存不存在，直接返回null
+        if (cachedInfo == null) {
+            return null
+        }
+        
+        // 计算缓存是否过期：当前时间 >= 创建时间 + 缓存时间
+        val currentTime = System.currentTimeMillis()
+        val cacheExpireTime = cachedInfo.createdTime + (cacheTimeMinutes * 60 * 1000L)
+        
+        if (currentTime >= cacheExpireTime) {
+            // 缓存已过期，删除缓存
+            domainCache.remove(cacheKey)
+            return null
+        }
+        
+        // 缓存有效，返回域名信息
+        return cachedInfo.domainInfo
     }
     
     /**
@@ -160,13 +184,7 @@ class DomainState {
                     lastUpdated = System.currentTimeMillis()
                 )
                 
-                // 更新缓存
-                val cacheKey = "$domain:$name"
-                domainCache[cacheKey] = CachedDomainInfo(
-                    domainInfo = domainInfo,
-                    expirationTime = System.currentTimeMillis() + CACHE_EXPIRATION_TIME
-                )
-                
+                updateCache(name, domainInfo)
                 result[domain] = domainInfo
             }
             
@@ -203,26 +221,28 @@ class DomainState {
     
     /**
      * 手动更新域名状态缓存
+     * @param name 对端名称
      * @param domainInfo 域名信息
      */
-    fun updateCache(domainInfo: DomainInfo) {
-        domainCache[domainInfo.domain] = CachedDomainInfo(
+    fun updateCache(name:String, domainInfo: DomainInfo) {
+        // 获取配置中的缓存时间（分钟）
+        val cacheTimeMinutes = config.getCacheTime()
+        
+        // 如果缓存时间为0，表示不使用缓存，直接返回不保存
+        if (cacheTimeMinutes <= 0) {
+            return
+        }
+        
+        // 当前时间作为缓存创建时间
+        val currentTime = System.currentTimeMillis()
+        
+        // 生成缓存键
+        val cacheKey = "$name:${domainInfo.domain}"
+        
+        // 更新缓存，使用当前时间作为创建时间
+        domainCache[cacheKey] = CachedDomainInfo(
             domainInfo = domainInfo,
-            expirationTime = System.currentTimeMillis() + CACHE_EXPIRATION_TIME
-        )
-    }
-    
-    /**
-     * 设置缓存过期时间
-     * @param domain 域名
-     * @param duration 持续时间
-     * @param timeUnit 时间单位
-     */
-    fun setCacheExpiration(domain: String, duration: Long, timeUnit: TimeUnit) {
-        val cachedInfo = domainCache[domain] ?: return
-        domainCache[domain] = CachedDomainInfo(
-            domainInfo = cachedInfo.domainInfo,
-            expirationTime = System.currentTimeMillis() + timeUnit.toMillis(duration)
+            createdTime = currentTime
         )
     }
 }

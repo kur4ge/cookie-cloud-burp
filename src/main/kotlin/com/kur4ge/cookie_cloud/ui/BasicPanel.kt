@@ -3,6 +3,7 @@ package com.kur4ge.cookie_cloud.ui
 import burp.api.montoya.MontoyaApi
 import burp.api.montoya.core.ToolType
 import com.kur4ge.cookie_cloud.utils.Config
+import com.kur4ge.cookie_cloud.utils.Version
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
@@ -14,7 +15,8 @@ class BasicPanel(private val api: MontoyaApi) {
     private val enableToggle = JToggleButton("启用", false)
     private val endpointField = JTextField("", 100)
     private val config = Config.getInstance()
-    
+    private val cacheTimeField = JTextField("10", 5)
+
     // 定义工具常量
     companion object {
         val TOOL_SUITE = 1 shl ToolType.SUITE.ordinal
@@ -58,7 +60,7 @@ class BasicPanel(private val api: MontoyaApi) {
         // 添加标题边框
         panel.border = BorderFactory.createTitledBorder(
             BorderFactory.createEtchedBorder(),
-            "基本设置",
+            Version.getVersionDescription(),
             TitledBorder.LEFT,
             TitledBorder.TOP
         )
@@ -71,12 +73,25 @@ class BasicPanel(private val api: MontoyaApi) {
         gbc.gridx = 0
         gbc.gridy = 0
         gbc.gridwidth = 1
-        panel.add(JLabel("Cookie Cloud 状态:"), gbc)
+        panel.add(JLabel("全局状态:"), gbc)
         
         gbc.gridx = 1
         gbc.gridy = 0
         gbc.weightx = 0.5
         panel.add(enableToggle, gbc)
+        
+        // 添加缓存时间设置
+        gbc.gridx = 0
+        gbc.gridy = 1
+        gbc.gridwidth = 1
+        gbc.weightx = 0.0
+        panel.add(JLabel("缓存时间(分钟):"), gbc)
+        
+        gbc.gridx = 1
+        gbc.gridy = 1
+        gbc.gridwidth = 1
+        gbc.weightx = 0.5
+        panel.add(cacheTimeField, gbc)
         
         // 创建工具选择面板
         val toolsPanel = JPanel()
@@ -131,19 +146,19 @@ class BasicPanel(private val api: MontoyaApi) {
         
         // Endpoint 设置
         gbc.gridx = 0
-        gbc.gridy = 1
+        gbc.gridy = 2
         gbc.gridwidth = 1
         gbc.weightx = 0.0
         panel.add(JLabel("Endpoint:"), gbc)
         
         gbc.gridx = 1
-        gbc.gridy = 1
+        gbc.gridy = 2
         gbc.gridwidth = 1
         gbc.weightx = 0.5
         panel.add(endpointField, gbc)
         
         gbc.gridx = 2
-        gbc.gridy = 1
+        gbc.gridy = 2
         gbc.gridwidth = 1
         gbc.weightx = 0.0
         val saveEndpointButton = JButton("保存")
@@ -162,7 +177,7 @@ class BasicPanel(private val api: MontoyaApi) {
         }
         
         // 为每个复选框添加事件监听
-        toolCheckboxes.forEach { (toolFlag, checkbox) ->
+        toolCheckboxes.forEach { (_, checkbox) ->
             checkbox.addActionListener {
                 updateEnabledTools()
             }
@@ -171,6 +186,14 @@ class BasicPanel(private val api: MontoyaApi) {
         saveEndpointButton.addActionListener {
             val endpoint = endpointField.text
             config.setEndpoint(endpoint)
+            
+            // 保存缓存时间
+            try {
+                val cacheTime = cacheTimeField.text.toInt()
+                config.setCacheTime(cacheTime)
+            } catch (e: NumberFormatException) {
+                JOptionPane.showMessageDialog(panel, "缓存时间必须是数字", "输入错误", JOptionPane.ERROR_MESSAGE)
+            }
         }
     }
     
@@ -189,6 +212,12 @@ class BasicPanel(private val api: MontoyaApi) {
         enableToggle.isSelected = config.isEnabled()
         enableToggle.text = if (enableToggle.isSelected) "已启用" else "已禁用"
         endpointField.text = config.getEndpoint()
+        
+        // 加载缓存时间
+        val cacheTime = config.getCacheTime()
+        if (cacheTime >= 0) {
+            cacheTimeField.text = cacheTime.toString()
+        }
         
         // 加载工具设置
         val enabledTools = config.getEnabledTools()
