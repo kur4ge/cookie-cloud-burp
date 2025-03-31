@@ -93,9 +93,14 @@ class PeerKeyPanel(private val api: MontoyaApi) {
         addButton.addActionListener {
             val name = nameField.text
             val peerName = peerNameField.text
-            val key = keyField.text
+            val key = if (keyField.text.startsWith("0x", ignoreCase = true)) {
+                keyField.text.substring(2)
+            } else {
+                keyField.text
+            }
+
             if (name.isNotEmpty() && key.isNotEmpty() && peerName.isNotEmpty()) {
-                peerTableModel.addRow(arrayOf(name, peerName, key))
+                peerTableModel.addRow(arrayOf(name, peerName, "0x" + key))
                 config.addPeer(name, peerName, key)
                 nameField.text = ""
                 peerNameField.text = ""
@@ -109,7 +114,12 @@ class PeerKeyPanel(private val api: MontoyaApi) {
         editButton.addActionListener {
             val name = nameField.text
             val peerName = peerNameField.text
-            val key = keyField.text
+            val key = if (keyField.text.startsWith("0x", ignoreCase = true)) {
+                keyField.text.substring(2)
+            } else {
+                keyField.text
+            }
+
             val selectedRow = peerTable.selectedRow
             
             if (selectedRow != -1 && name.isNotEmpty() && key.isNotEmpty() && peerName.isNotEmpty()) {
@@ -121,7 +131,7 @@ class PeerKeyPanel(private val api: MontoyaApi) {
                 // 更新表格数据
                 peerTableModel.setValueAt(name, selectedRow, 0)
                 peerTableModel.setValueAt(peerName, selectedRow, 1)
-                peerTableModel.setValueAt(key, selectedRow, 2)
+                peerTableModel.setValueAt("0x" + key, selectedRow, 2)
                 
                 // 依次尝试使用不同的方法更新配置
                 var updateSuccess = config.updatePeer(originalName, name, peerName, key)
